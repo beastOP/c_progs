@@ -1,0 +1,80 @@
+#!/bin/python
+import sys
+import os
+
+if(len(sys.argv) != 2):
+    quit()
+
+libname = sys.argv[1]
+
+cwd = os.getcwd()
+
+isDir = os.path.isdir(os.path.join(cwd, libname))
+if isDir:
+    cwd = os.path.join(cwd, libname)
+else:
+    os.mkdir(libname)
+    cwd = os.path.join(cwd, libname)
+
+Makefile = f'''GCC=gcc
+SHARED=-shared
+OBJ=-c -Wall -Werror -fpic
+PWD={cwd}
+
+all: main
+
+{libname}.o:
+	$(GCC) $(OBJ) {libname}.c
+
+lib{libname}.so: {libname}.o
+	$(GCC) $(SHARED) -o lib{libname}.so {libname}.o
+
+main: lib{libname}.so
+	gcc -L$(PWD) -Wall main.c -l{libname}
+
+clean:
+	rm -rf {libname}.o lib{libname}.so a.out
+'''
+
+file_name = 'Makefile'
+
+file = os.path.join(cwd, file_name)
+
+with open(file, 'w') as f:
+    f.write(Makefile)
+    f.close()
+
+file_name = f"{libname}.c"
+
+file = os.path.join(cwd, file_name)
+
+with open(file, 'w') as f:
+    f.write(f"#include \"{libname}.h\"")
+    f.close()
+
+file_name = f"{libname}.h"
+
+file = os.path.join(cwd, file_name)
+
+with open(file, 'w') as f:
+    _libname = libname.upper()
+    f.write(f'''#ifndef __{_libname}_H__
+#define __{_libname}_H__
+
+#endif''')
+    f.close()
+
+file_name = f"main.c"
+
+file = os.path.join(cwd, file_name)
+
+with open(file, 'w') as f:
+    _libname = libname.upper()
+    f.write(f'''#include <stdio.h>
+#include "{libname}.h"
+
+int main() {{
+    printf("{_libname}");
+}}''')
+    f.close()
+
